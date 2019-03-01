@@ -716,11 +716,12 @@ namespace tracer {
       PIN_InterceptSignal(SIGTERM, callbackSignals, nullptr);
       PIN_InterceptSignal(SIGBUS,  callbackSignals, nullptr);
 
-      /* Init the pintool python module */
-      PyImport_AppendInittab("pintool", initpintool);
+      /* Init the triton and pintool python module */
+      PyImport_AppendInittab("pintool", tracer::pintool::initpintool);
+      PyImport_AppendInittab("triton",  triton::bindings::python::PyInit_triton);
 
-      /* Init the triton python module */
-      triton::bindings::python::PyInit_triton();
+      /* Init python */
+      Py_Initialize();
 
       /* Init the pintool python arguments */
       tracer::pintool::initPythonArgs(argc, argv);
