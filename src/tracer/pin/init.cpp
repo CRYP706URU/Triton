@@ -141,12 +141,42 @@ namespace tracer {
     };
 
 
+    #if IS_PY3
+    static struct PyModuleDef pintoolModuleDef = {
+            PyModuleDef_HEAD_INIT,
+            "pintool",
+            NULL,
+            -1,
+            tracer::pintool::pintoolCallbacks,
+            NULL, /* m_slots    */
+            NULL, /* m_traverse */
+            NULL, /* m_clear    */
+            NULL, /* m_free     */
+    };
+    #endif
+
+
     void initBindings(int argc, char* argv[]) {
+      #if IS_PY3
+      /* https://stackoverflow.com/a/54891187 */
+      wchar_t** _argv = static_cast<wchar_t**>(PyMem_Malloc(sizeof(wchar_t*) * argc));
+      for (int i = 0; i < argc; i++) {
+        wchar_t* arg = static_cast<wchar_t*>(Py_DecodeLocale(argv[i], NULL));
+        _argv[i] = arg;
+      }
       /* Setup argc and argv */
+      PySys_SetArgv(argc, _argv);
+      #else
       PySys_SetArgv(argc, argv);
+      #endif
 
       /* Setup pintool bindings */
+      #if IS_PY3
+      /* TODO: doesn't work */
+      PyObject* pintoolModule = PyModule_Create(&tracer::pintool::pintoolModuleDef);
+      #else
       PyObject* pintoolModule = Py_InitModule("pintool", tracer::pintool::pintoolCallbacks);
+      #endif
 
       if (pintoolModule == nullptr) {
         std::cerr << "Failed to initialize the pintool bindings" << std::endl;

@@ -671,14 +671,14 @@ namespace tracer {
 
 
     //! The pintool's entry point
-    int main(int argc, char *argv[]) {
+    int main(int argc, char* argv[]) {
       PIN_InitSymbols();
       PIN_SetSyntaxIntel();
       if(PIN_Init(argc, argv))
-          return Usage();
+        return Usage();
 
       /* Init the Triton module */
-      triton::bindings::python::inittriton();
+      triton::bindings::python::PyInit_triton();
 
       /* Define Triton architecure */
       if (sizeof(void*) == QWORD_SIZE)
