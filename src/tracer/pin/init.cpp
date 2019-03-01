@@ -156,27 +156,13 @@ namespace tracer {
     #endif
 
 
-    void initBindings(int argc, char* argv[]) {
-      #if IS_PY3
-      /* https://stackoverflow.com/a/54891187 */
-      wchar_t** _argv = static_cast<wchar_t**>(PyMem_Malloc(sizeof(wchar_t*) * argc));
-      for (int i = 0; i < argc; i++) {
-        wchar_t* arg = static_cast<wchar_t*>(Py_DecodeLocale(argv[i], NULL));
-        _argv[i] = arg;
-      }
-      /* Setup argc and argv */
-      PySys_SetArgv(argc, _argv);
-      #else
-      PySys_SetArgv(argc, argv);
-      #endif
-
-      /* Setup pintool bindings */
-      #if IS_PY3
-      /* TODO: doesn't work */
+    #if IS_PY3
+    PyObject* initpintool(void) {
       PyObject* pintoolModule = PyModule_Create(&tracer::pintool::pintoolModuleDef);
-      #else
+    #else
+    void initpintool(void) {
       PyObject* pintoolModule = Py_InitModule("pintool", tracer::pintool::pintoolCallbacks);
-      #endif
+    #endif
 
       if (pintoolModule == nullptr) {
         std::cerr << "Failed to initialize the pintool bindings" << std::endl;
@@ -231,6 +217,10 @@ namespace tracer {
       /* Add namespace into the pintool module */
       PyModule_AddObject(pintoolModule, "INSERT_POINT", idCallbackClass);
       PyModule_AddObject(pintoolModule, "STANDARD", idStandardClass);
+
+      #if IS_PY3
+      return pintoolModule;
+      #endif
     }
 
 
@@ -251,6 +241,22 @@ namespace tracer {
 
       fclose(fd);
       return true;
+    }
+
+
+    void initPythonArgs(int argc, char* argv[]) {
+      #if IS_PY3
+      /* https://stackoverflow.com/a/54891187 */
+      wchar_t** _argv = static_cast<wchar_t**>(PyMem_Malloc(sizeof(wchar_t*) * argc));
+      for (int i = 0; i < argc; i++) {
+        wchar_t* arg = static_cast<wchar_t*>(Py_DecodeLocale(argv[i], NULL));
+        _argv[i] = arg;
+      }
+      /* Setup argc and argv */
+      PySys_SetArgv(argc, _argv);
+      #else
+      PySys_SetArgv(argc, argv);
+      #endif
     }
 
   };
